@@ -1,2 +1,2 @@
 # emailservices
-Email Services
+Registration / Contact / Subscription and other email notifications.
