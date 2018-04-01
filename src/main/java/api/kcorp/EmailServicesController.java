@@ -3,9 +3,7 @@ package api.kcorp;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,11 +25,16 @@ import api.kcorp.model.Status;
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/v1")
-public class EmailServicesController implements ApplicationContextAware {
-	
-	private ApplicationContext context = null;
-	
-	@RequestMapping(value = "/submitfeedback", method = RequestMethod.POST)
+public class EmailServicesController {
+
+	private final JmsTemplate jmsTemplate;
+
+    @Autowired
+    public EmailServicesController(JmsTemplate jmsTemplate) {
+        this.jmsTemplate = jmsTemplate;
+    }
+
+    @RequestMapping(value = "/submitfeedback", method = RequestMethod.POST)
 	public @ResponseBody Status submit(@Valid @RequestBody ContactForm form, BindingResult bindingResult) throws EmailServicesException {
 		
 		if(bindingResult.hasErrors()) {
@@ -39,7 +42,6 @@ public class EmailServicesController implements ApplicationContextAware {
 		}
 		
 		// Push it to the message queue.
-		JmsTemplate jmsTemplate = context.getBean(JmsTemplate.class);
 		System.out.println("Sending a message.");
 		jmsTemplate.convertAndSend("shreebala.submitfeedback", form);
 		return new Status("All fine", 201);
@@ -53,7 +55,6 @@ public class EmailServicesController implements ApplicationContextAware {
 		}
 		
 		// Push it to the message queue.
-		JmsTemplate jmsTemplate = context.getBean(JmsTemplate.class);
 		System.out.println("Sending a message");
 		jmsTemplate.convertAndSend("simplyvijay.emailvijay", form);
 		return new Status("All fine", 201);
@@ -65,11 +66,6 @@ public class EmailServicesController implements ApplicationContextAware {
 		return new Status("All fine", 200);
 	}
 	
-	@Override
-	public void setApplicationContext(ApplicationContext context) throws BeansException {
-		this.context = context;
-	}
-	
 	// Handle exceptions
 	@SuppressWarnings("unused")
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -78,5 +74,4 @@ public class EmailServicesController implements ApplicationContextAware {
 	handleBadRequest(HttpServletRequest req, Exception ex) {
 	    return new Status(ex.getMessage(), HttpStatus.BAD_REQUEST.value());
 	}
-	
 }
