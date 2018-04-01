@@ -42,7 +42,6 @@ public class EmailServicesController {
 		}
 		
 		// Push it to the message queue.
-		System.out.println("Sending a message.");
 		jmsTemplate.convertAndSend("shreebala.submitfeedback", form);
 		return new Status("All fine", 201);
 	}
@@ -55,7 +54,6 @@ public class EmailServicesController {
 		}
 		
 		// Push it to the message queue.
-		System.out.println("Sending a message");
 		jmsTemplate.convertAndSend("simplyvijay.emailvijay", form);
 		return new Status("All fine", 201);
 	}
