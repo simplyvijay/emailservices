@@ -23,6 +23,12 @@ repositories {
 	mavenCentral()
 }
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'api.kcorp.EmailServicesApplication'
+    }
+}
+
 dependencies {
 	compile('org.springframework.boot:spring-boot-starter-web')
 	compile('org.springframework.boot:spring-boot-starter-data-rest')
