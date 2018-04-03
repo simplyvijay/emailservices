@@ -4,7 +4,7 @@ After network.target = auditd.service
 
 [Service]
 Type = simple
-ExecStart = java -jar $EMAILSERVICES_HOME/build/libs/emailservices-0.0.1-SNAPSHOT.jar
+ExecStart = $EMAILSERVICES_HOME/deployment/executable.sh
 
 [Install]
 WantedBy = multi-user.target

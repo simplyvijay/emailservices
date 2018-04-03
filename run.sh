@@ -28,4 +28,5 @@ rm /etc/systemd/system/emailservices.service
 
 echo 'Starting the service'
 cp $EMAILSERVICES_HOME/deployment/emailservices.service /etc/systemd/system/emailservices.service
+systemctl daemon-reload
 service emailservices start
