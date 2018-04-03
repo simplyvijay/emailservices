@@ -18,6 +18,7 @@ fi
 export EMAILSERVICES_HOME=`pwd`
 
 echo 'Building the project'
+chmod +x ./gradlew
 ./gradlew clean build
 
 echo 'Stopping the existing service'
