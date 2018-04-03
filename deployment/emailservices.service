@@ -5,7 +5,7 @@ After network.target = auditd.service
 [Service]
 Type = simple
 EnvironmentFile=/home/emailservices/envfile
-ExecStart = /root/emailservices/build/libs/emailservices-0.0.1-SNAPSHOT.jar
+ExecStart = ${EMAILSERVICES_HOME}/build/libs/emailservices-0.0.1-SNAPSHOT.jar
 
 [Install]
 WantedBy = multi-user.target

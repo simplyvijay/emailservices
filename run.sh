@@ -1,6 +1,8 @@
 #!/bin/bash
 
 export EMAILSERVICES_HOME=`pwd`
+echo EMAILSERVICES_HOME=`pwd` > tempfile
+cat /home/emailservices/envtemplate tempfile > /home/emailservices/envfile
 
 echo 'Building the project'
 chmod +x ./gradlew
