@@ -1,20 +1,5 @@
 #!/bin/bash
 
-if [ -z "$SMTP_SERVER" ]; then
-echo "SMTP_SERVER is not defined"
-exit 1
-fi
-
-if [ -z "$EMAIL_USERNAME" ]; then
-echo "EMAIL_USERNAME is not defined"
-exit 1
-fi
-
-if [ -z "$EMAIL_PASSWORD" ]; then
-echo "EMAIL_PASSWORD is not defined"
-exit 1
-fi
-
 export EMAILSERVICES_HOME=`pwd`
 
 echo 'Building the project'
