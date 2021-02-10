@@ -1,102 +1,61 @@
 package api.kcorp.message;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
-import org.springframework.mail.MailException;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 
 import api.kcorp.model.ContactForm;
-import api.kcorp.model.EmailForm;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.spring5.SpringTemplateEngine;
+
+import com.sendgrid.*;
+
+import java.io.IOException;
 
 @Component
 public class Receiver {
 
-	private final JavaMailSender mailSender;
-	private final SpringTemplateEngine templateEngine;
+	@Value("${spring.sendgrid.api-key}")
+	private String apiKey;
 
-	@Value("${spring.mail.username}")
+	@Value("${sender.email}")
 	private String senderEmail;
-
-	@Autowired
-	public Receiver(JavaMailSender mailSender, SpringTemplateEngine templateEngine) {
-		this.mailSender = mailSender;
-		this.templateEngine = templateEngine;
-	}
 
 	@JmsListener(destination = "shreebala.submitfeedback", containerFactory = "myFactory")
     public void receiveMessage(ContactForm form) {
         //Send mail.
         try {
-	        MimeMessage msg = mailSender.createMimeMessage();
-	        MimeMessageHelper helper = new MimeMessageHelper(msg, true);
-	        
-	        helper.setFrom("contact@shreebalanrithyalaya.com");
-	        helper.setTo("contact@shreebalanrithyalaya.com");
-	        helper.setReplyTo(form.getEmail());
-	        helper.setSubject("New comment received on shreebalanrithyalaya.com");
-	        helper.setText(	"New comment received with the following details\n\nName: " + form.getName() 
-	        				+ "\nEmail: " + form.getEmail() 
-	        				+ "\nSubject: " + form.getSubject()
-	        				+ "\nMessage: " + form.getMessage() 
-	        				+ "\nSubscription: " + (form.getOptin()? "Yes" : "No") + "\n\nThanks\nShreebala Nrithyalaya\n\nNote: A confirmation mail has been sent to the sender's mail address");
-	        mailSender.send(msg);
+        	Email from = new Email(senderEmail, "Shreebala Nrithyalaya");
+        	Email to = new Email("contact@shreebalanrithyalaya.com");
+        	String message = 	"New comment received with the following details\n\nName: " + form.getName()
+					+ "\nEmail: " + form.getEmail()
+					+ "\nSubject: " + form.getSubject()
+					+ "\nMessage: " + form.getMessage()
+					+ "\nSubscription: " + (form.getOptin()? "Yes" : "No") + "\n\nThanks\nShreebala Nrithyalaya\n\nNote: A confirmation mail has been sent to the sender's mail address";
 
-	        helper.setFrom("contact@shreebalanrithyalaya.com");
-	        helper.setTo(form.getEmail());
-	        helper.setReplyTo("contact@shreebalanrithyalaya.com");
-	        helper.setSubject("Thank you for your enquiry / suggestion.");
-            Context context = new Context();
-            context.setVariable("name", form.getName());
-            String html = templateEngine.process("email_shreebala", context);
-	        helper.setText(html, true);
-	        mailSender.send(msg);
-        }
-        catch(MailException | MessagingException me) {
-        	System.err.println(me.getMessage());
-        }
-	}
-    
-    @JmsListener(destination = "simplyvijay.emailvijay", containerFactory = "myFactory")
-    public void receiveEmailNotification(EmailForm form) {
-        //Send mail.
-        try {
-	        MimeMessage msg = mailSender.createMimeMessage();
-	        MimeMessageHelper helper = new MimeMessageHelper(msg, true);
+        	Content content = new Content("text/plain", message);
+        	Mail mail = new Mail(from, "New comment received on shreebalanrithyalaya.com", to, content);
 
-	        helper.setFrom(senderEmail);
-	        helper.setTo("contact@simplyvijay.com");
-	        helper.setSubject("New message received on simplyvijay.com");
-	        helper.setText(	"New message received with the following details\n\nName: " + form.getName() 
-	        				+ "\nEmail: " + form.getEmail() 
-	        				+ "\nPurpose: " + form.getPurpose()
-	        				+ "\nSubject: " + form.getSubject()
-	        				+ "\nMessage: " + form.getMessage()
-	        				+ "\nJob Description: " + form.getJd()
-	        				+ "\nDivision: " + form.getDivision()
-	        				+ "\n\nThanks\nVijay");
-	        mailSender.send(msg);
+        	SendGrid sg = new SendGrid(apiKey);
 
-	        helper.setFrom(senderEmail);
-	        helper.setTo(form.getEmail());
-	        helper.setReplyTo("contact@simplyvijay.com");
-	        helper.setSubject("Thank you for your enquiry");
-            Context context = new Context();
-            context.setVariable("name", form.getName());
-            String html = templateEngine.process("email_simplyvijay", context);
-            helper.setText(html, true);
-            mailSender.send(msg);
+        	Request request = new Request();
+        	request.setMethod(Method.POST);
+        	request.setEndpoint("mail/send");
+        	request.setBody(mail.build());
+        	Response response = sg.api(request);
+        	if(response.getStatusCode() != HttpStatus.ACCEPTED.value()) {
+        		System.err.println("Received an error code " + response.getStatusCode() + " from SendGrid");
+			}
+
+			String body = String.format("{\"personalizations\": [{\"to\": [{\"email\": \"%s\",\"name\": \"%s\"}],\"dynamic_template_data\": {\"name\": \"%s\"},\"subject\": \"Thank you for your enquiry / suggestion.\"}],\"from\": {\"email\": \"%s\",\"name\": \"Shreebala Nrithyalaya\"},\"reply_to\": {\"email\": \"contact@shreebalanrithyalaya.com\",\"name\": \"Shreebala Nrithyalaya\"},\"template_id\": \"d-66e43dd9dd4345f1bde343b867e808a6\"}",
+					form.getEmail(), form.getName(), form.getName(), senderEmail);
+        	request.setBody(body);
+			response = sg.api(request);
+			if(response.getStatusCode() != HttpStatus.ACCEPTED.value()) {
+				System.err.println("Received an error code " + response.getStatusCode() + " from SendGrid");
+			}
         }
-        catch(MailException | MessagingException me) {
-        	System.err.println(me.getMessage());
+        catch(IOException ex) {
+        	System.err.println("Sendgrid: " + ex.getMessage());
         }
 	}
-
 }
