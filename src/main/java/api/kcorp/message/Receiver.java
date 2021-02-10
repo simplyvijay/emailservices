@@ -34,6 +34,7 @@ public class Receiver {
 
         	Content content = new Content("text/plain", message);
         	Mail mail = new Mail(from, "New comment received on shreebalanrithyalaya.com", to, content);
+        	mail.setReplyTo(new Email(form.getEmail()));
 
         	SendGrid sg = new SendGrid(apiKey);
 
@@ -46,7 +47,7 @@ public class Receiver {
         		System.err.println("Received an error code " + response.getStatusCode() + " from SendGrid");
 			}
 
-			String body = String.format("{\"personalizations\": [{\"to\": [{\"email\": \"%s\",\"name\": \"%s\"}],\"dynamic_template_data\": {\"name\": \"%s\"},\"subject\": \"Thank you for your enquiry / suggestion.\"}],\"from\": {\"email\": \"%s\",\"name\": \"Shreebala Nrithyalaya\"},\"reply_to\": {\"email\": \"contact@shreebalanrithyalaya.com\",\"name\": \"Shreebala Nrithyalaya\"},\"template_id\": \"d-66e43dd9dd4345f1bde343b867e808a6\"}",
+			String body = String.format("{\"personalizations\": [{\"to\": [{\"email\": \"%s\",\"name\": \"%s\"}],\"dynamic_template_data\": {\"name\": \"%s\"},\"subject\": \"Thank you for your enquiry / suggestion.\"}],\"from\": {\"email\": \"%s\",\"name\": \"Shreebala Nrithyalaya\"},\"reply_to\": {\"email\": \"contact@shreebalanrithyalaya.com\",\"name\": \"Shreebala Nrithyalaya\"},\"template_id\": \"d-b1e5eb09c1584e08b1f5e2ce2ae4511a\"}",
 					form.getEmail(), form.getName(), form.getName(), senderEmail);
         	request.setBody(body);
 			response = sg.api(request);
